@@ -4,9 +4,10 @@ import 'package:jw_player_flutter/di/get_it_setup.dart';
 import 'package:jw_player_flutter/miniplayer_example/miniplayer_cubit.dart';
 import 'package:jw_player_flutter/miniplayer_example/player_widget_manager.dart';
 import 'package:jw_player_flutter/player/ad_offset.dart';
-import 'package:jw_player_flutter/player/player_observer.dart';
+import 'package:jw_player_flutter/player/player_channel_manager.dart';
 import 'package:jw_player_flutter/player/video_ad_config.dart';
 import 'package:jw_player_flutter/player/video_player_config.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   setUpGetIt();
@@ -23,7 +24,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Player(title: 'JWPlayer Flutter'),
+      home: Provider<PlayerChannelManagerImpl>(
+        create: (_) => PlayerChannelManagerImpl(),
+        child: const Player(title: 'JWPlayer Flutter'),
+      ),
     );
   }
 }
@@ -66,21 +70,22 @@ class _PlayerState extends State<Player> {
   );
 
   final ScrollController scrollController = ScrollController();
+  late PlayerChannelManagerImpl _playerChannelManager;
 
   @override
   void initState() {
     super.initState();
-
-    PlayerEventManager.instance().miniplayerPlayingStream.listen((isPlaying) {
-      if (scrollController.offset > 300 &&
-          getIt<MiniplayerCubit>().state is MiniplayerNotShowed) {
-        final Widget player = getIt<PlayerWidgetManager>().getVideo(
-          "1",
-          videoPlayerConfig,
-        );
-        getIt<MiniplayerCubit>().showMiniplayer(player);
-      }
-    });
+    _playerChannelManager = Provider.of<PlayerChannelManagerImpl>(context)
+      ..miniplayerPlayingStream.listen((isPlaying) {
+        if (scrollController.offset > 300 &&
+            getIt<MiniplayerCubit>().state is MiniplayerNotShowed) {
+          final Widget player = getIt<PlayerWidgetManager>().getVideo(
+            "1",
+            videoPlayerConfig,
+          );
+          getIt<MiniplayerCubit>().showMiniplayer(player);
+        }
+      });
 
     scrollController.addListener(() {
       if (scrollController.offset < 300 &&

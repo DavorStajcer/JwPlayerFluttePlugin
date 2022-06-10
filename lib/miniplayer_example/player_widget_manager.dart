@@ -7,20 +7,20 @@ class PlayerWidgetManager {
 
   getVideo(String videoId, VideoPlayerConfig videoPlayerConfig) {
     if (activePlayers.containsKey(videoId)) {
-      print('Video getting: getting old one');
       return activePlayers[videoId];
     }
-    print('Video getting: getting new one');
     return _createNewPlayer(videoId, videoPlayerConfig);
   }
 
   MediaPlayer _createNewPlayer(
-      String videoId, VideoPlayerConfig videoPlayerConfig) {
-    activePlayers[videoId] = MediaPlayer(
-      key: Key(videoId),
+      String playerId, VideoPlayerConfig videoPlayerConfig) {
+    activePlayers[playerId] = MediaPlayer(
+      key: Key(playerId),
       videoPlayerConfig: videoPlayerConfig,
       seek: 0,
     );
-    return activePlayers[videoId]!;
+    return activePlayers[playerId]!;
   }
+
+  onPlayerDisposed(String playerId) => activePlayers.remove(playerId);
 }

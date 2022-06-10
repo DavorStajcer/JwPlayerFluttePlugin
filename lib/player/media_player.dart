@@ -6,10 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jw_player_flutter/player/player_arguments.dart';
 import 'package:jw_player_flutter/player/video_player_config.dart';
+import 'package:provider/provider.dart';
 
-import 'player_observer.dart';
+import 'player_channel_manager.dart';
 
-class MediaPlayer extends StatefulWidget {
+class MediaPlayer extends StatelessWidget {
   final VideoPlayerConfig videoPlayerConfig;
   final double seek;
 
@@ -20,33 +21,12 @@ class MediaPlayer extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  MediaPlayerState createState() => MediaPlayerState();
-}
-
-class MediaPlayerState extends State<MediaPlayer> {
-  final PlayerEventManager playerObserver = PlayerEventManager.instance();
-  int? _platformViewId;
-
-  @override
-  void didUpdateWidget(MediaPlayer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void dispose() {
-    _disposePlatformView(_platformViewId, isDisposing: true);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    playerObserver.isAutoPlay = widget.videoPlayerConfig.autoplay;
-
     if (Platform.isAndroid) {
       AspectRatio(
         aspectRatio: 16 / 9,
         child: AndroidView(
-          key: widget.key,
+          key: key,
           viewType: 'tv.mta.jwplayer/JWPlayerView',
           gestureRecognizers: Set()
             ..add(
@@ -60,15 +40,15 @@ class MediaPlayerState extends State<MediaPlayer> {
               ),
             ),
           creationParams: {
-            PlayerArguments.autoPlay: widget.videoPlayerConfig.autoplay,
-            PlayerArguments.file: widget.videoPlayerConfig.file,
-            PlayerArguments.adTags: widget.videoPlayerConfig.videoAdConfigs,
-            PlayerArguments.seek: widget.seek,
+            PlayerArguments.autoPlay: videoPlayerConfig.autoplay,
+            PlayerArguments.file: videoPlayerConfig.file,
+            PlayerArguments.adTags: videoPlayerConfig.videoAdConfigs,
+            PlayerArguments.seek: seek,
           },
           creationParamsCodec: const JSONMessageCodec(),
           onPlatformViewCreated: (viewId) {
-            _platformViewId = viewId;
-            playerObserver.listen(_onFirstFrame, _onPlayerError);
+            Provider.of<PlayerChannelManager>(context)
+                .onPlatformViewCreated(viewId);
           },
         ),
       );
@@ -89,13 +69,15 @@ class MediaPlayerState extends State<MediaPlayer> {
               ),
             ),
           creationParams: {
-            "autoPlay": widget.videoPlayerConfig.autoplay,
-            "file": widget.videoPlayerConfig.file,
+            PlayerArguments.autoPlay: videoPlayerConfig.autoplay,
+            PlayerArguments.file: videoPlayerConfig.file,
+            PlayerArguments.adTags: videoPlayerConfig.videoAdConfigs,
+            PlayerArguments.seek: seek,
           },
           creationParamsCodec: const JSONMessageCodec(),
           onPlatformViewCreated: (viewId) {
-            _platformViewId = viewId;
-            playerObserver.listen(_onFirstFrame, _onPlayerError);
+            Provider.of<PlayerChannelManager>(context)
+                .onPlatformViewCreated(viewId);
           },
         ),
       );
@@ -107,30 +89,5 @@ class MediaPlayerState extends State<MediaPlayer> {
         color: Colors.black87,
       ),
     );
-  }
-
-  void _onFirstFrame() async {
-    /* first frame */
-  }
-
-  void _onPlayerError() async {
-    /* player error */
-  }
-
-  void _disposePlatformView(int? viewId, {bool isDisposing = false}) {
-    if (viewId != null) {
-      var methodChannel = MethodChannel("tv.mta.jwplayer/JWPlayerView_$viewId");
-
-      PlayerEventManager.instance().onMiniplayerDispose();
-
-      /* clean platform view */
-      methodChannel.invokeMethod("dispose");
-
-      if (!isDisposing) {
-        setState(() {
-          _platformViewId = null;
-        });
-      }
-    }
   }
 }

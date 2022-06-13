@@ -44,11 +44,11 @@ class PlayerChannelManagerImpl implements PlayerChannelManager {
 
   @override
   void onPlatformViewCreated(int viewId) async {
-    _eventChannel = PlayerChannel.getEventChannelForView(viewId);
+    /*   _eventChannel = PlayerChannel.getEventChannelForView(viewId);
     _eventStreamSubscription =
         eventChannel?.receiveBroadcastStream().listen(processEvent);
 
-    _methodChannel = PlayerChannel.getMethodChannelForView(viewId);
+    _methodChannel = PlayerChannel.getMethodChannelForView(viewId); */
   }
 
   @override

@@ -1,15 +1,21 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jw_player_flutter/di/get_it_setup.dart';
 import 'package:jw_player_flutter/miniplayer_example/miniplayer_cubit.dart';
 import 'package:jw_player_flutter/miniplayer_example/player_widget_manager.dart';
 import 'package:jw_player_flutter/player/ad_offset.dart';
+import 'package:jw_player_flutter/player/channels.dart';
+import 'package:jw_player_flutter/player/media_player.dart';
 import 'package:jw_player_flutter/player/player_channel_manager.dart';
 import 'package:jw_player_flutter/player/video_ad_config.dart';
 import 'package:jw_player_flutter/player/video_player_config.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   setUpGetIt();
   runApp(const MyApp());
 }
@@ -70,22 +76,29 @@ class _PlayerState extends State<Player> {
   );
 
   final ScrollController scrollController = ScrollController();
-  late PlayerChannelManagerImpl _playerChannelManager;
+  //late PlayerChannelManagerImpl _playerChannelManager;
 
   @override
   void initState() {
     super.initState();
-    _playerChannelManager = Provider.of<PlayerChannelManagerImpl>(context)
-      ..miniplayerPlayingStream.listen((isPlaying) {
-        if (scrollController.offset > 300 &&
-            getIt<MiniplayerCubit>().state is MiniplayerNotShowed) {
-          final Widget player = getIt<PlayerWidgetManager>().getVideo(
+    PlayerChannel.getMethodChannelForLog().setMethodCallHandler((call) async {
+      log("LOG CHANNEL:  method call $call");
+      if (call.method == "log") {
+        log("LOG CHANNEL: ${call.arguments}");
+      }
+    });
+    Provider.of<PlayerChannelManagerImpl>(context, listen: false)
+        .miniplayerPlayingStream
+        .listen((isPlaying) {
+      if (scrollController.offset > 300 &&
+          getIt<MiniplayerCubit>().state is MiniplayerNotShowed) {
+        final Widget player = getIt<PlayerWidgetManager>().getVideo(
             "1",
             videoPlayerConfig,
-          );
-          getIt<MiniplayerCubit>().showMiniplayer(player);
-        }
-      });
+            Provider.of<PlayerChannelManagerImpl>(context, listen: false));
+        getIt<MiniplayerCubit>().showMiniplayer(player);
+      }
+    });
 
     scrollController.addListener(() {
       if (scrollController.offset < 300 &&
@@ -97,6 +110,7 @@ class _PlayerState extends State<Player> {
 
   @override
   Widget build(BuildContext context) {
+    log('is android ->${Platform.isAndroid}');
     return Scaffold(
       body: Stack(
         children: [
@@ -110,7 +124,8 @@ class _PlayerState extends State<Player> {
                       ? getIt<PlayerWidgetManager>().getVideo(
                           "1",
                           videoPlayerConfig,
-                        )
+                          Provider.of<PlayerChannelManagerImpl>(context,
+                              listen: false))
                       : AspectRatio(
                           aspectRatio: 16 / 9,
                           child: Container(

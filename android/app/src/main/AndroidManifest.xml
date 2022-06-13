@@ -4,6 +4,11 @@
         android:label="jw_player_flutter"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+       <meta-data
+           android:name="JW_LICENSE_KEY"
+           android:value="yFAYulN71cCymBMt/rh8Cbwwx2IMCJGr/S/6/5hlDKAOo+9CCfInCBuJOZ3PfKFW" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -23,11 +24,13 @@ class MediaPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (Platform.isAndroid) {
-      AspectRatio(
+      log("building nedia playerrr");
+      return AspectRatio(
         aspectRatio: 16 / 9,
         child: AndroidView(
           key: key,
-          viewType: 'tv.mta.jwplayer/JWPlayerView',
+          viewType: '<jw-player-view>',
+          layoutDirection: TextDirection.ltr,
           gestureRecognizers: Set()
             ..add(
               Factory<HorizontalDragGestureRecognizer>(
@@ -47,13 +50,14 @@ class MediaPlayer extends StatelessWidget {
           },
           creationParamsCodec: const JSONMessageCodec(),
           onPlatformViewCreated: (viewId) {
-            Provider.of<PlayerChannelManager>(context)
+            log('Platforrm view created for $viewId');
+            Provider.of<PlayerChannelManager>(context, listen: false)
                 .onPlatformViewCreated(viewId);
           },
         ),
       );
     } else if (Platform.isIOS) {
-      AspectRatio(
+      return AspectRatio(
         aspectRatio: 16 / 9,
         child: UiKitView(
           viewType: 'tv.mta.jwplayer/JWPlayerView',
@@ -76,13 +80,14 @@ class MediaPlayer extends StatelessWidget {
           },
           creationParamsCodec: const JSONMessageCodec(),
           onPlatformViewCreated: (viewId) {
+            log("platform view created $viewId");
             Provider.of<PlayerChannelManager>(context)
                 .onPlatformViewCreated(viewId);
           },
         ),
       );
     }
-
+    log('bulding nothing');
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Container(
